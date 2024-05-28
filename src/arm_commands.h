@@ -46,3 +46,9 @@ void arm_back()
     printf("arm in delivery mode, angle:%f\n", rkServosGetPosition(1));
     
 }
+
+void puck_eject()
+{
+    rkServosSetPosition(3, 90);
+    delay(1000);
+}

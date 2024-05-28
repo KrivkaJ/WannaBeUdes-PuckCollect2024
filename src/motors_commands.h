@@ -1,6 +1,6 @@
 const int speed = 100;
 const float ticksToMm = 3.62; // prepocet z tiku v enkoderech na mm
-const float wheel_diameter = 162;
+const float wheel_diameter = 270;
 
 //jizda rovne o zadanou vzdalenost 
 void forward(int mm)
@@ -105,7 +105,7 @@ bool go_for_puck(){
             clear_avg += clear[i];
         }
         clear_avg /= 2;
-    }while((clear_avg > 1000) && (rkUltraMeasure(1) > 40));
+    }while((rkUltraMeasure(1) > 200)); // (clear_avg > 1000) && 
     rkMotorsSetSpeed(0, 0);
     if (clear_avg < 1000)
     {

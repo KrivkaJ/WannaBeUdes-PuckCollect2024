@@ -5,6 +5,7 @@
 byte state = 1;
 byte puck_count = 0;
 bool start_zone_red = 0;
+byte linie = 0;
 
 // Funkce setup se zavolá vždy po startu robota.
 float g_US = 1;
@@ -50,6 +51,8 @@ void setup() {
 
     /////////////////////////////////////////////////////////////////
     
+    rkServosSetPosition(3, -10);
+
     // start tlacitko, vyber startovni zony (barvy)
     while (true)
     {
@@ -68,27 +71,13 @@ void setup() {
         if (start_zone_red)
         {
             rkLedRed(true);
-            rkLedBlue(false);
+            rkLedGreen(false);
         }
         else
         {
-            rkLedBlue(true);
+            rkLedGreen(true);
             rkLedRed(false);
         }
-    }
-
-    /*
-    // zhasnuti ledek
-    for (byte i = 0; i < 8; i++)
-    {
-        rkSmartLedsRGB(i, 0, 0, 0);
-    }
-    */
-    
-
-    while (true)
-    {
-        get_puck_color();
     }
 
     //start tlacitko pro kalibraci klepet
@@ -117,7 +106,7 @@ printf("batery percent: %u\n", rkBatteryPercent());
                 puck_count++;
             }            
             
-            if (puck_count > 10)
+            if (puck_count > 10 || linie > 5)
             {
                 state = 7; // návrat do startovní zóny a vylození puků
             }
@@ -126,88 +115,38 @@ printf("batery percent: %u\n", rkBatteryPercent());
             {
                 state = 1; //opakování
             }
-            else if (rkUltraMeasure(1) < 40)
+            else if (rkUltraMeasure(1) < 40 || rkButtonIsPressed(BTN_DOWN))
             {
                 state = 3; // otoceni a start nové linie
             }
             break;
         case 3: // otoceni a start nové linie
             state = 4;
-            curve(150, 180, 5, true); // otoceni o 180 stupnu, !!!musi se doladit
+            turn(90);
+            forward(100);
+            turn(90);
             back_button();
+            linie++;
             state = 1;
             break;
         case 5:
             state = 6;
-            // jizda eskem
-            forward(50);
+            
             state = 7;
             break;
         case 7:
             state = 8;
-            // jizda eskem
-            curve(150, 150, 9, false);
+            // návrat do startovní zóny
+
+
+            state = 9; //vyklopeni puku
             break;
-        /*case 9:
+        case 9: //vyklopeni puku
             state = 10;
-            forward(1750);
-            // otocka do hriste
-            turn_by_wall();
-            for (size_t i = 0; i < 5; i++)
-            {            
-                // jizda doprostred hriste
-                forward(900 - (k*100)); k++;
-                turn(-90);
-                back_button();
-                // jizda pro kostku
-                //zapnuti ledek                 
-                for (byte i = 0; i < 8; i++)
-                {
-                    rkSmartLedsRGB(i, 255, 255, 255);
-                }     
-                arm_down(); bool brick;
-                brick = go_for_brick();
-                if (brick)
-                {            
-                    klepeta_close();
-                    arm_up();
-                    rkMotorsSetSpeed(-100, -100);
-                    //tady se rozhodne na jakou barvu robot pojede
-                    rgb_value = rgb_get();
-                    if (rgb_value == RED)
-                    {
-                        go_to_red();
-                    }
-                    else if (rgb_value == GREEN)
-                    {
-                        go_to_green();
-                    }
-                    else
-                    {
-                        go_to_blue();
-                    }
-                    // jizda zpet ke zdi nakonec eska
-                    back_button();
-                }
-                else
-                {
-                    i--; k++;
-                    back_button();
-                    forward(150);
-                    turn(90);
-                    back_button();
-                }
-            }
-            forward(50);
-            turn(80);
-            back_button();
-            // cesta z rohu eskem zpet
-            forward(100);
-            turn_by_wall();
-            back_button();
-            forward(300);
+            puck_eject();
+            forward(-200);
             state = 11;
-            break;         */
+            break;         
         case 11:
             state = 12;
             // musi se dopocitat
@@ -226,7 +165,11 @@ printf("batery percent: %u\n", rkBatteryPercent());
             break;
         case 69:
             state = 70;
-            turn(90);
+            while (true)
+            {
+                update_sensors();
+            }
+            
             //klepeta_close();
             //klepeta_open();
         }
