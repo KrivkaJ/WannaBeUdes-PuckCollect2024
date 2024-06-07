@@ -49,6 +49,6 @@ void arm_back()
 
 void puck_eject()
 {
-    rkServosSetPosition(3, 90);
+    rkServosSetPosition(2, -10);
     delay(1000);
 }

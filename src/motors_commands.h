@@ -1,11 +1,26 @@
 const int speed = 100;
 const float ticksToMm = 3.62; // prepocet z tiku v enkoderech na mm
-const float wheel_diameter = 270;
+const float wheel_diameter = 285;
 
 //jizda rovne o zadanou vzdalenost 
 void forward(int mm)
 {
-    rkMotorsDrive(mm * ticksToMm, mm * ticksToMm, speed);
+    rkMotorsDrive(mm * ticksToMm*0.92, mm * ticksToMm, speed);
+
+    /*
+    bool st = false; 
+
+    rkMotorsDriveRightAsync(ticksToMm * mm, 100, [&](){st = true;});
+    rkMotorsDriveLeftAsync(ticksToMm * mm*0.93, 90);
+    while (true)
+    {
+        if (st)
+        {
+            break;
+        }
+    }
+    rkMotorsSetSpeed(0, 0);
+    */
 }
 
 //zatoceni na miste o zadany pocet stupnu
@@ -87,27 +102,29 @@ void turn_by_wall()
     back_button();
 }
 
-uint16_t red, green, blue, clear[2], clear_avg;
+uint16_t red, green, blue, clear, sum;
 
 bool go_for_puck(){
-    rkMotorsSetSpeed(speed, speed);
-    delay(1000);
+    rkMotorsSetSpeed(99, 100);
+    delay(200);
     do{
-        clear_avg = 0;
-        for (byte i = 0; i < 2; i++)
+        tcs.getRawData(&red, &green, &blue, &clear);
+        //printf("clear: %hu, US: %hhu\n", clear, rkUltraMeasure(1));
+        delay(50);
+        sum = red + green + blue;
+        printf("clear: %hu, red: %hu, green: %hu, blue: %hu, sum: %hu\n", clear, red, green, blue, red+green+blue);
+        update_sensors();
+        if (linie > 0)
         {
-            tcs.getRawData(&red, &green, &blue, &clear[i]);
-            printf("clear: %hu, US: %hhu\n", clear[i], rkUltraMeasure(1));
-            delay(50);
+            if ((rkUltraMeasure(2) < 400) || (rkUltraMeasure(2) == 0)) //nalezeni soupere
+            {   
+                printf("nalezeni soupere\n");
+                break;
+            }
         }
-        for (byte i = 0; i < 2; i++)
-        {
-            clear_avg += clear[i];
-        }
-        clear_avg /= 2;
-    }while((rkUltraMeasure(1) > 200)); // (clear_avg > 1000) && 
+    }while((clear > 600) && ((rkUltraMeasure(1) > 300) || (rkUltraMeasure(1) == 0))); // (clear_avg > 1000) && 
     rkMotorsSetSpeed(0, 0);
-    if (clear_avg < 1000)
+    if ((clear <= 600) && (rkUltraMeasure(1) > 300))
     {
         printf("found by rgb senzor\n");
         return true;
@@ -120,45 +137,72 @@ bool go_for_puck(){
     
 }
 
-
+/*
 SortColor pos = NEUTRAL;
-void set_sorting_mechanism(SortColor color){
-    if (color == SortColor::RED)
+void set_sorting_mechanism(SortColor col){
+    if (col == SortColor::RED)
     {
-        rkServosSetPosition(1, 40);
-        delay(3500);
+        rkServosSetPosition(1, 90);
+        delay(1200);
         rkServosSetPosition(1, 0);
         pos = RED;
     }
-    if (color == SortColor::BLUE)
+    if (col == SortColor::BLUE)
     {
-        rkServosSetPosition(1, -40);
-        delay(3500);
+        rkServosSetPosition(1, -90);
+        delay(1200); 
         rkServosSetPosition(1, 0);
         pos = BLUE;
     }
-    if (color == SortColor::NEUTRAL)
+    printf("pos1: %i\n", pos);
+    if (col == SortColor::NEUTRAL)
     {
         if (pos = SortColor::RED)
         {
-            rkServosSetPosition(1, 40);
-            delay(3500);
+            rkServosSetPosition(1, -90);
+            delay(1200); 
             rkServosSetPosition(1, 0);
         }
         if (pos = SortColor::BLUE)
         {
-            rkServosSetPosition(1, -40);
-            delay(3500);
+            rkServosSetPosition(1, 90);
+            delay(1200);
             rkServosSetPosition(1, 0);
         }
         pos = NEUTRAL;
     }
-    printf("pos: %i\n", rkServosGetPosition(1));
+    printf("pos2: %i\n", pos);
 }
-
+*/
 void sort_puck(){
     SortColor color = get_puck_color();
-    set_sorting_mechanism(color);
-    forward(100);
-    set_sorting_mechanism(SortColor::NEUTRAL);
+    byte i = 1;
+    if (start_zone_red){
+        i=1;
+    }
+    else
+    {
+        i=-1;
+    }
+    
+    if(color == SortColor::RED){
+        rkServosSetPosition(1, 90*i);
+        delay(1200);
+        rkServosSetPosition(1, 0);
+        forward(120);
+        delay(1000);
+        rkServosSetPosition(1, -90*i);
+        delay(1200); 
+        rkServosSetPosition(1, 0);
+    }
+    if(color == SortColor::BLUE){
+        rkServosSetPosition(1, -90*i);
+        delay(1200);
+        rkServosSetPosition(1, 0);
+        forward(120);
+        delay(1000);
+        rkServosSetPosition(1, 90*i);
+        delay(1200); 
+        rkServosSetPosition(1, 0);
+    }
 }

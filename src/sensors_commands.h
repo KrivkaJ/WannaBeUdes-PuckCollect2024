@@ -8,8 +8,9 @@ void encodery() {
 }
 
 void update_sensors() {
-    g_US = rkUltraMeasure(1);
-    printf(" g_US: %f \n", g_US);
+    g_US1 = rkUltraMeasure(1);
+    g_US2 = rkUltraMeasure(2);
+    printf(" g_US1: %f, g_US2: %f \n", g_US1, g_US2);
     //std::cout << " " << std::endl;
 }
 
